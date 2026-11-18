@@ -1,5 +1,6 @@
 import { DomainEvent } from "../events/domain-event";
 import { WalletCreatedEvent } from "../events/wallet-created.event";
+import { MoneyDepositedEvent } from "../events/money-deposited.event";
 
 export class WalletAggregate {
 
@@ -9,9 +10,9 @@ export class WalletAggregate {
 
     private createdAt?: Date;
 
-    private balance?: number = 0;
+    private balance: number = 0;
 
-    apply(event: DomainEvent): void {
+    apply(event: DomainEvent) {
 
         if (event instanceof WalletCreatedEvent) {
 
@@ -20,8 +21,11 @@ export class WalletAggregate {
             this.ownerName = event.ownerName;
 
             this.createdAt = event.occurredAt;
+        }
 
+        if (event instanceof MoneyDepositedEvent) {
 
+            this.balance += event.amount;
         }
     }
 
@@ -38,6 +42,22 @@ export class WalletAggregate {
 
         return aggregate;
     }
+
+    deposit(amount: number) {
+
+        if (amount <= 0) {
+
+            throw new Error(
+                "Deposit amount must be greater than zero"
+            );
+        }
+
+        return new MoneyDepositedEvent(
+            this.walletId,
+            amount
+        );
+    }
+
 
     getState() {
         return {

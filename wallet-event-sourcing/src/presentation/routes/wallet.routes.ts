@@ -8,6 +8,8 @@ import { CreateWalletHandler } from "../../application/handlers/create-wallet.ha
 import { createWalletSchema } from "../schemas/create-wallet.schema";
 
 import { WalletLoaderService } from "../../application/services/wallet-loader.service";
+import { DepositMoneyHandler } from "../../application/handlers/deposit-money.handler";
+import { depositMoneySchema } from "../schemas/deposit-money.schema";
 
 export async function walletRoutes(
     app: FastifyInstance
@@ -59,6 +61,45 @@ export async function walletRoutes(
                 };
 
             return aggregate.getState();
+        }
+    );
+
+    app.post(
+        "/wallets/  /deposit",
+        async (request, reply) => {
+
+            const { walletId } =
+                request.params as {
+                    walletId: string;
+                };
+
+            const body =
+                depositMoneySchema.parse(
+                    request.body
+                );
+
+            const eventStore =
+                new MongoEventStore(
+                    getDatabase()
+                );
+
+            const loader =
+                new WalletLoaderService(
+                    eventStore
+                );
+
+            const handler =
+                new DepositMoneyHandler(
+                    eventStore,
+                    loader
+                );
+
+            await handler.execute({
+                walletId,
+                amount: body.amount
+            });
+
+            return reply.status(204).send();
         }
     );
 
