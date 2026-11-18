@@ -4,6 +4,7 @@ import Fastify from "fastify";
 import { connectDatabase } from "../infrastructure/database/mongo";
 
 import { registerTestRoute } from "../presentation/routes/test-route";
+import { walletRoutes } from "../presentation/routes/wallet.routes";
 
 const app = Fastify();
 
@@ -13,8 +14,8 @@ app.get("/health", async () => {
     };
 });
 
-
 registerTestRoute(app);
+walletRoutes(app);
 
 async function start() {
     await connectDatabase();
