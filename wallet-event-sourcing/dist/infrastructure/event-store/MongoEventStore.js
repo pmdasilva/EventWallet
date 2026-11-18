@@ -14,7 +14,7 @@ class MongoEventStore {
             eventType: event.constructor.name,
             occurredAt: event.occurredAt,
             version: event.version,
-            payload: event
+            payload: event.payload()
         });
     }
     async getEventsByAggregateId(aggregateId) {

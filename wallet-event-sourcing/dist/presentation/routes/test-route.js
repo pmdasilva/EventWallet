@@ -6,6 +6,9 @@ const mongo_1 = require("../../infrastructure/database/mongo");
 const domain_event_1 = require("../../domain/events/domain-event");
 class TestEvent extends domain_event_1.DomainEvent {
     name;
+    payload() {
+        throw new Error("Method not implemented.");
+    }
     constructor(aggregateId, name) {
         super(aggregateId);
         this.name = name;
