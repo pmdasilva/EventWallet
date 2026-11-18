@@ -6,6 +6,8 @@ const MongoEventStore_1 = require("../../infrastructure/event-store/MongoEventSt
 const create_wallet_handler_1 = require("../../application/handlers/create-wallet.handler");
 const create_wallet_schema_1 = require("../schemas/create-wallet.schema");
 const wallet_loader_service_1 = require("../../application/services/wallet-loader.service");
+const deposit_money_handler_1 = require("../../application/handlers/deposit-money.handler");
+const deposit_money_schema_1 = require("../schemas/deposit-money.schema");
 async function walletRoutes(app) {
     app.post("/wallets", async (request, reply) => {
         const body = create_wallet_schema_1.createWalletSchema.parse(request.body);
@@ -22,5 +24,17 @@ async function walletRoutes(app) {
         const loader = new wallet_loader_service_1.WalletLoaderService(eventStore);
         const aggregate = await loader.load(walletId);
         return aggregate.getState();
+    });
+    app.post("/wallets/:walletId/deposit", async (request, reply) => {
+        const { walletId } = request.params;
+        const body = deposit_money_schema_1.depositMoneySchema.parse(request.body);
+        const eventStore = new MongoEventStore_1.MongoEventStore((0, mongo_1.getDatabase)());
+        const loader = new wallet_loader_service_1.WalletLoaderService(eventStore);
+        const handler = new deposit_money_handler_1.DepositMoneyHandler(eventStore, loader);
+        await handler.execute({
+            walletId,
+            amount: body.amount
+        });
+        return reply.status(204).send();
     });
 }
