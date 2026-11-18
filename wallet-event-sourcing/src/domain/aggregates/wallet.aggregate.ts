@@ -1,6 +1,7 @@
 import { DomainEvent } from "../events/domain-event";
 import { WalletCreatedEvent } from "../events/wallet-created.event";
 import { MoneyDepositedEvent } from "../events/money-deposited.event";
+import { MoneyWithdrawnEvent } from "../events/money-withdrawn.event";
 
 export class WalletAggregate {
 
@@ -17,15 +18,18 @@ export class WalletAggregate {
         if (event instanceof WalletCreatedEvent) {
 
             this.walletId = event.aggregateId;
-
             this.ownerName = event.ownerName;
-
             this.createdAt = event.occurredAt;
         }
 
         if (event instanceof MoneyDepositedEvent) {
 
             this.balance += event.amount;
+        }
+
+        if (event instanceof MoneyWithdrawnEvent) {
+
+            this.balance -= event.amount;
         }
     }
 
@@ -53,6 +57,28 @@ export class WalletAggregate {
         }
 
         return new MoneyDepositedEvent(
+            this.walletId,
+            amount
+        );
+    }
+
+    withdraw(amount: number) {
+
+        if (amount <= 0) {
+
+            throw new Error(
+                "Withdrawal amount must be greater than zero"
+            );
+        }
+
+        if (amount > this.balance) {
+
+            throw new Error(
+                "Insufficient balance"
+            );
+        }
+
+        return new MoneyWithdrawnEvent(
             this.walletId,
             amount
         );
