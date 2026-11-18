@@ -4,8 +4,14 @@ import { WalletAggregate }
 import { MongoEventStore }
     from "../../infrastructure/event-store/MongoEventStore";
 
+import { MoneyDepositedEvent }
+    from "../../domain/events/money-deposited.event";
+
 import { WalletCreatedEvent }
     from "../../domain/events/wallet-created.event";
+
+import { MoneyWithdrawnEvent }
+    from "../../domain/events/money-withdrawn.event";
 
 export class WalletLoaderService {
 
@@ -27,21 +33,31 @@ export class WalletLoaderService {
 
                     case "WalletCreatedEvent":
 
-                        const payload = event.payload as {
-                            ownerName: string;
-                        };
-
                         return new WalletCreatedEvent(
                             event.aggregateId,
-                            payload.ownerName
+                            (event.payload as { ownerName: string }).ownerName
+                        );
+
+                    case "MoneyDepositedEvent":
+
+                        return new MoneyDepositedEvent(
+                            event.aggregateId,
+                            (event.payload as { amount: number }).amount
+                        );
+
+                    case "MoneyWithdrawnEvent":
+
+                        return new MoneyWithdrawnEvent(
+                            event.aggregateId,
+                            (event.payload as { amount: number }).amount
                         );
 
                     default:
+
                         throw new Error(
                             `Evento não suportado: ${event.eventType}`
                         );
                 }
-
             });
 
         return WalletAggregate

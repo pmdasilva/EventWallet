@@ -10,6 +10,8 @@ import { createWalletSchema } from "../schemas/create-wallet.schema";
 import { WalletLoaderService } from "../../application/services/wallet-loader.service";
 import { DepositMoneyHandler } from "../../application/handlers/deposit-money.handler";
 import { depositMoneySchema } from "../schemas/deposit-money.schema";
+import { WithdrawMoneyHandler } from "../../application/commands/withdraw-money.command";
+import { withdrawMoneySchema } from "../schemas/withdraw-money.schema";
 
 export async function walletRoutes(
     app: FastifyInstance
@@ -65,7 +67,7 @@ export async function walletRoutes(
     );
 
     app.post(
-        "/wallets/  /deposit",
+        "/wallets/:walletId/deposit",
         async (request, reply) => {
 
             const { walletId } =
@@ -90,6 +92,45 @@ export async function walletRoutes(
 
             const handler =
                 new DepositMoneyHandler(
+                    eventStore,
+                    loader
+                );
+
+            await handler.execute({
+                walletId,
+                amount: body.amount
+            });
+
+            return reply.status(204).send();
+        }
+    );
+
+    app.post(
+        "/wallets/:walletId/withdraw",
+        async (request, reply) => {
+
+            const { walletId } =
+                request.params as {
+                    walletId: string;
+                };
+
+            const body =
+                withdrawMoneySchema.parse(
+                    request.body
+                );
+
+            const eventStore =
+                new MongoEventStore(
+                    getDatabase()
+                );
+
+            const loader =
+                new WalletLoaderService(
+                    eventStore
+                );
+
+            const handler =
+                new WithdrawMoneyHandler(
                     eventStore,
                     loader
                 );
