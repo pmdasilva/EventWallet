@@ -5,6 +5,9 @@ import { getDatabase } from "../../infrastructure/database/mongo";
 import { DomainEvent } from "../../domain/events/domain-event";
 
 class TestEvent extends DomainEvent {
+    payload(): Record<string, unknown> {
+        throw new Error("Method not implemented.");
+    }
     constructor(
         aggregateId: string,
         public name: string

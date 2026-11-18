@@ -1,3 +1,4 @@
+import { EventDocument } from "../../infrastructure/event-store/EventDocument";
 import { DomainEvent } from "../events/domain-event";
 
 export interface EventStore {
@@ -5,5 +6,7 @@ export interface EventStore {
 
     getEventsByAggregateId(
         aggregateId: string
-    ): Promise<any[]>;
+    ): Promise<EventDocument[]>;
 }
+
+export { EventDocument };

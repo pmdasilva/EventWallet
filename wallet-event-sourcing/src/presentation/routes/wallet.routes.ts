@@ -5,8 +5,9 @@ import { getDatabase } from "../../infrastructure/database/mongo";
 import { MongoEventStore } from "../../infrastructure/event-store/MongoEventStore";
 
 import { CreateWalletHandler } from "../../application/handlers/create-wallet.handler";
-import { createWalletSchema }
-    from "../schemas/create-wallet.schema";
+import { createWalletSchema } from "../schemas/create-wallet.schema";
+
+import { WalletLoaderService } from "../../application/services/wallet-loader.service";
 
 export async function walletRoutes(
     app: FastifyInstance
@@ -23,7 +24,7 @@ export async function walletRoutes(
         );
 
         const handler = new CreateWalletHandler(
-            eventStore
+            eventStore as unknown as ConstructorParameters<typeof CreateWalletHandler>[0]
         );
 
         const result = await handler.execute({
@@ -32,4 +33,34 @@ export async function walletRoutes(
 
         return reply.status(201).send(result);
     });
+
+    app.get(
+        "/wallets/:walletId",
+        async (request) => {
+
+            const { walletId } =
+                request.params as {
+                    walletId: string
+                };
+
+            const eventStore =
+                new MongoEventStore(
+                    getDatabase()
+                );
+
+            const loader =
+                new WalletLoaderService(
+                    eventStore
+                );
+
+            const aggregate =
+                await loader.load(walletId) as unknown as {
+                    getState(): unknown
+                };
+
+            return aggregate.getState();
+        }
+    );
+
+
 }

@@ -6,12 +6,28 @@ class WalletAggregate {
     walletId;
     ownerName;
     createdAt;
+    balance = 0;
     apply(event) {
         if (event instanceof wallet_created_event_1.WalletCreatedEvent) {
             this.walletId = event.aggregateId;
             this.ownerName = event.ownerName;
             this.createdAt = event.occurredAt;
         }
+    }
+    static rehydrate(events) {
+        const aggregate = new WalletAggregate();
+        for (const event of events) {
+            aggregate.apply(event);
+        }
+        return aggregate;
+    }
+    getState() {
+        return {
+            walletId: this.walletId,
+            ownerName: this.ownerName,
+            createdAt: this.createdAt,
+            balance: this.balance
+        };
     }
 }
 exports.WalletAggregate = WalletAggregate;

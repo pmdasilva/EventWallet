@@ -1,7 +1,7 @@
 import { Db } from "mongodb";
 
 import { DomainEvent } from "../../domain/events/domain-event";
-import { EventStore } from "../../domain/repositories/event-store";
+import { EventDocument, EventStore } from "../../domain/repositories/event-store";
 
 export class MongoEventStore implements EventStore {
 
@@ -24,7 +24,7 @@ export class MongoEventStore implements EventStore {
 
                 version: event.version,
 
-                payload: event
+                payload: event.payload()
             });
     }
 
@@ -33,7 +33,7 @@ export class MongoEventStore implements EventStore {
     ) {
 
         return this.database
-            .collection("wallet_events")
+            .collection<EventDocument>("wallet_events")
             .find({
                 aggregateId
             })
