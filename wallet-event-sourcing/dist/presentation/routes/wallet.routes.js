@@ -11,6 +11,7 @@ const deposit_money_handler_1 = require("../../application/handlers/deposit-mone
 const deposit_money_schema_1 = require("../schemas/deposit-money.schema");
 const withdraw_money_command_1 = require("../../application/commands/withdraw-money.command");
 const withdraw_money_schema_1 = require("../schemas/withdraw-money.schema");
+const wallet_balance_at_service_1 = require("../../application/services/wallet-balance-at.service");
 async function walletRoutes(app) {
     app.post("/wallets", async (request, reply) => {
         const body = create_wallet_schema_1.createWalletSchema.parse(request.body);
@@ -58,5 +59,12 @@ async function walletRoutes(app) {
         const walletEventsService = new wallet_events_service_1.WalletEventsService(eventStore);
         const events = await walletEventsService.getEvents(walletId);
         return reply.send(events);
+    });
+    app.get("/wallets/:walletId/balance-at", async (request, reply) => {
+        const { walletId } = request.params;
+        const { date } = request.query;
+        const service = new wallet_balance_at_service_1.WalletBalanceAtService(new MongoEventStore_1.MongoEventStore((0, mongo_1.getDatabase)()));
+        const result = await service.execute(walletId, new Date(date));
+        return reply.send(result);
     });
 }
