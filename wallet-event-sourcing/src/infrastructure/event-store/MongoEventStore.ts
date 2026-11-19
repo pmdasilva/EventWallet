@@ -4,7 +4,6 @@ import { DomainEvent } from "../../domain/events/domain-event";
 import { EventDocument, EventStore } from "../../domain/repositories/event-store";
 
 export class MongoEventStore implements EventStore {
-
     constructor(
         private readonly database: Db
     ) { }
