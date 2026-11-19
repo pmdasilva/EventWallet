@@ -8,6 +8,7 @@ import { CreateWalletHandler } from "../../application/handlers/create-wallet.ha
 import { createWalletSchema } from "../schemas/create-wallet.schema";
 
 import { WalletLoaderService } from "../../application/services/wallet-loader.service";
+import { WalletEventsService } from "../../application/services/wallet-events.service";
 import { DepositMoneyHandler } from "../../application/handlers/deposit-money.handler";
 import { depositMoneySchema } from "../schemas/deposit-money.schema";
 import { WithdrawMoneyHandler } from "../../application/commands/withdraw-money.command";
@@ -143,6 +144,33 @@ export async function walletRoutes(
             return reply.status(204).send();
         }
     );
+
+    app.get(
+        "/wallets/:walletId/events",
+        async (request, reply) => {
+
+            const { walletId } =
+                request.params as {
+                    walletId: string;
+                };
+
+            const eventStore =
+                new MongoEventStore(
+                    getDatabase()
+                );
+
+            const walletEventsService =
+                new WalletEventsService(eventStore);
+
+            const events =
+                await walletEventsService.getEvents(
+                    walletId
+                );
+
+            return reply.send(events);
+        }
+    );
+
 
 
 }
