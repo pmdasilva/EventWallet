@@ -13,6 +13,7 @@ import { DepositMoneyHandler } from "../../application/handlers/deposit-money.ha
 import { depositMoneySchema } from "../schemas/deposit-money.schema";
 import { WithdrawMoneyHandler } from "../../application/commands/withdraw-money.command";
 import { withdrawMoneySchema } from "../schemas/withdraw-money.schema";
+import { WalletBalanceAtService } from "../../application/services/wallet-balance-at.service";
 
 export async function walletRoutes(
     app: FastifyInstance
@@ -168,6 +169,37 @@ export async function walletRoutes(
                 );
 
             return reply.send(events);
+        }
+    );
+
+    app.get(
+        "/wallets/:walletId/balance-at",
+        async (request, reply) => {
+
+            const { walletId } =
+                request.params as {
+                    walletId: string;
+                };
+
+            const { date } =
+                request.query as {
+                    date: string;
+                };
+
+            const service =
+                new WalletBalanceAtService(
+                    new MongoEventStore(
+                        getDatabase()
+                    )
+                );
+
+            const result =
+                await service.execute(
+                    walletId,
+                    new Date(date)
+                );
+
+            return reply.send(result);
         }
     );
 
