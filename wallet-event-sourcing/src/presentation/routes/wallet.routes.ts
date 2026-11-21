@@ -14,6 +14,7 @@ import { depositMoneySchema } from "../schemas/deposit-money.schema";
 import { WithdrawMoneyHandler } from "../../application/commands/withdraw-money.command";
 import { withdrawMoneySchema } from "../schemas/withdraw-money.schema";
 import { WalletBalanceAtService } from "../../application/services/wallet-balance-at.service";
+import { walletBalanceAtQuerySchema } from "../schemas/wallet-balance-at.schema";
 
 export async function walletRoutes(
     app: FastifyInstance
@@ -181,10 +182,16 @@ export async function walletRoutes(
                     walletId: string;
                 };
 
-            const { date } =
-                request.query as {
-                    date: string;
-                };
+            const query =
+                walletBalanceAtQuerySchema.safeParse(
+                    request.query
+                );
+
+            if (!query.success) {
+                return reply.status(400).send({
+                    message: "Informe date como uma data/hora ISO 8601 válida."
+                });
+            }
 
             const service =
                 new WalletBalanceAtService(
@@ -196,7 +203,7 @@ export async function walletRoutes(
             const result =
                 await service.execute(
                     walletId,
-                    new Date(date)
+                    new Date(query.data.date)
                 );
 
             return reply.send(result);

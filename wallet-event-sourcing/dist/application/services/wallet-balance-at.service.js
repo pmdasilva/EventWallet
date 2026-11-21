@@ -7,6 +7,9 @@ class WalletBalanceAtService {
         this.eventStore = eventStore;
     }
     async execute(walletId, targetDate) {
+        if (Number.isNaN(targetDate.getTime())) {
+            throw new Error("A data para consulta do saldo é inválida.");
+        }
         const events = await this.eventStore
             .getEventsByAggregateId(walletId);
         let balance = 0;

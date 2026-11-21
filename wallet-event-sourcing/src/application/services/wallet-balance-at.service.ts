@@ -10,6 +10,9 @@ export class WalletBalanceAtService {
         walletId: string,
         targetDate: Date
     ) {
+        if (Number.isNaN(targetDate.getTime())) {
+            throw new Error("A data para consulta do saldo é inválida.");
+        }
 
         const events =
             await this.eventStore

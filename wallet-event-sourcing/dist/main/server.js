@@ -19,8 +19,7 @@ app.get("/health", async () => {
 async function start() {
     await (0, mongo_1.connectDatabase)();
     await app.listen({
-        port: Number(process.env.PORT),
-        host: "0.0.0.0"
+        port: Number(process.env.PORT) || 3000,
     });
 }
 start();
