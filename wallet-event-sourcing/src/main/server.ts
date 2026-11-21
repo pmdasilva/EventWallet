@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 
 import { connectDatabase } from "../infrastructure/database/mongo";
 import { registerTestRoute } from "../presentation/routes/test-route";
@@ -8,22 +9,8 @@ import { walletRoutes } from "../presentation/routes/wallet.routes";
 const app = Fastify();
 
 async function start() {
-    app.addHook("onRequest", async (request, reply) => {
-        const origin = request.headers.origin;
-
-        if (origin) {
-            reply.header("access-control-allow-origin", origin);
-            reply.header("vary", "Origin");
-        }
-
-        if (request.method === "OPTIONS") {
-            reply.header("access-control-allow-methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-            const requestedHeaders = request.headers["access-control-request-headers"];
-            if (requestedHeaders) {
-                reply.header("access-control-allow-headers", requestedHeaders);
-            }
-            return reply.code(204).send();
-        }
+    await app.register(cors, {
+        origin: true,
     });
 
     registerTestRoute(app);
