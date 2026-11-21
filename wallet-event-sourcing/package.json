@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/main/server.ts",
-    "build": "tsc",
+    "dev": "node node_modules/tsx/dist/cli.mjs watch src/main/server.ts",
+    "build": "node node_modules/typescript/bin/tsc",
+    "test": "node --import tsx --test tests/wallet-balance-at.service.test.ts tests/wallet-balance-at.route.test.ts",
     "start": "node dist/main/server.js"
   },
   "keywords": [],

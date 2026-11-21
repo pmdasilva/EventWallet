@@ -12,6 +12,7 @@ const deposit_money_schema_1 = require("../schemas/deposit-money.schema");
 const withdraw_money_command_1 = require("../../application/commands/withdraw-money.command");
 const withdraw_money_schema_1 = require("../schemas/withdraw-money.schema");
 const wallet_balance_at_service_1 = require("../../application/services/wallet-balance-at.service");
+const wallet_balance_at_schema_1 = require("../schemas/wallet-balance-at.schema");
 async function walletRoutes(app) {
     app.post("/wallets", async (request, reply) => {
         const body = create_wallet_schema_1.createWalletSchema.parse(request.body);
@@ -62,9 +63,14 @@ async function walletRoutes(app) {
     });
     app.get("/wallets/:walletId/balance-at", async (request, reply) => {
         const { walletId } = request.params;
-        const { date } = request.query;
+        const query = wallet_balance_at_schema_1.walletBalanceAtQuerySchema.safeParse(request.query);
+        if (!query.success) {
+            return reply.status(400).send({
+                message: "Informe date como uma data/hora ISO 8601 válida."
+            });
+        }
         const service = new wallet_balance_at_service_1.WalletBalanceAtService(new MongoEventStore_1.MongoEventStore((0, mongo_1.getDatabase)()));
-        const result = await service.execute(walletId, new Date(date));
+        const result = await service.execute(walletId, new Date(query.data.date));
         return reply.send(result);
     });
 }
