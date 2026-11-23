@@ -1,15 +1,15 @@
-# EventWallet
+# Event Wallet
 
-Aplicação de estudo baseada em Event Sourcing para criação e movimentação de carteiras digitais.
+Aplicação de estudo desenvolvida para explorar conceitos de arquitetura de software utilizando **Event Sourcing**, **DDD (Domain-Driven Design)** e **CQRS (em evolução)**.
 
-# Wallet Event Sourcing
-
-Uma API e um painel web desenvolvidos com **Node.js**, **TypeScript**, **Fastify**, **MongoDB**, **React** e **Event Sourcing**. O projeto explora conceitos como **CQRS**, **DDD**, **Event Store**, **auditoria de eventos**, **reidratação de agregados** e **consulta de estado histórico**.
+O projeto demonstra como reconstruir o estado de uma entidade a partir de eventos de domínio persistidos em um Event Store, em vez de armazenar apenas o estado atual.
 
 ## Sumário
 
+- [Demonstração](#demonstração)
 - [Objetivo](#-objetivo)
 - [Arquitetura](#-arquitetura)
+- [ADRs e arquitetura](#adrs-e-arquitetura)
 - [Tecnologias](#-tecnologias)
 - [Funcionalidades](#-funcionalidades-implementadas)
 - [API](#-api)
@@ -19,6 +19,20 @@ Uma API e um painel web desenvolvidos com **Node.js**, **TypeScript**, **Fastify
 - [Testes](#-testes)
 - [Roadmap](#-roadmap)
 - [Conceitos explorados](#-conceitos-explorados)
+
+## Demonstração
+
+### Frontend
+
+https://event-wallet-tau.vercel.app
+
+### Backend
+
+https://eventwallet-production.up.railway.app
+
+### Health Check
+
+https://eventwallet-production.up.railway.app/health
 
 ## 🎯 Objetivo
 
@@ -34,9 +48,33 @@ MoneyWithdrawn
 
 O estado atual da carteira é reconstruído pela reidratação do agregado `WalletAggregate`. A partir dos eventos persistidos também é possível calcular o saldo em uma data/hora anterior.
 
+Fluxo simplificado:
+
+```text
+WalletCreatedEvent
+        ↓
+MoneyDepositedEvent
+        ↓
+MoneyWithdrawnEvent
+        ↓
+Replay dos eventos
+        ↓
+Estado atual da carteira
+```
+
 ## 🏛 Arquitetura
 
-O projeto segue uma arquitetura em camadas para manter a separação de responsabilidades:
+Em produção, o frontend React publicado na Vercel consome a API Fastify no Railway, que persiste os eventos no MongoDB:
+
+```text
+React (Vercel)
+        ↓
+Fastify API (Railway)
+        ↓
+MongoDB (Railway)
+```
+
+O backend segue uma arquitetura em camadas para manter a separação de responsabilidades:
 
 ```text
 wallet-event-sourcing/
@@ -77,16 +115,47 @@ wallet-frontend/
 - **Main**: inicialização da API Fastify.
 - **Frontend**: interface React para operar a API e consultar a timeline.
 
+## ADRs e arquitetura
+
+As decisões arquiteturais do projeto são registradas como Architecture Decision Records em [`docs/adr/`](docs/adr/README.md). Consulte também a [visão geral da arquitetura](docs/architecture/overview.md), que apresenta diagramas Mermaid do estado atual e da proposta de evolução para CQRS. O template e as convenções para novos registros estão disponíveis no diretório de ADRs; a skill [`adr-documentation`](.github/skills/adr-documentation/SKILL.md) orienta o Copilot a criá-los e revisá-los.
+
 ---
 
 ## 🛠 Tecnologias
 
-- Backend: Node.js, TypeScript, Fastify e Zod
-- Persistência: MongoDB
-- Frontend: React, Vite e Tailwind CSS
-- Ambiente local: Docker Compose
-- Testes: Node.js Test Runner com `tsx`
-- Padrões: Event Sourcing, DDD e arquitetura em camadas
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+
+### Backend
+
+- Node.js
+- TypeScript
+- Fastify
+- MongoDB
+- Zod
+
+### Infraestrutura
+
+- Railway
+- Vercel
+- GitHub
+- Docker Compose para desenvolvimento local
+
+### Conceitos
+
+- Event Sourcing
+- Domain Events
+- Aggregate Root
+- Event Replay
+- Domain-Driven Design (DDD)
+- Separation of Concerns
+- REST API
+- Repository Pattern
+- CQRS em evolução
 
 ---
 
@@ -139,17 +208,19 @@ Estrutura de um documento persistido:
 - [x] Criação de carteira com nome do proprietário
 - [x] Geração de `walletId` com UUID
 - [x] Consulta do estado atual da carteira
+- [x] Reconstrução do estado via replay dos eventos
 - [x] Depósito de valores positivos
 - [x] Saque com validação de saldo suficiente
 - [x] Consulta da timeline de eventos
 - [x] Consulta do saldo em uma data/hora ISO 8601
-- [x] Reidratação do agregado a partir dos eventos
 - [x] Persistência do último `walletId` no navegador
 - [x] Painel React para criar e consultar carteiras
 
 ---
 
 ## 🌐 API
+
+Base URL de produção: `https://eventwallet-production.up.railway.app`
 
 Base URL local: `http://localhost:3000`
 
@@ -291,7 +362,19 @@ Para apontar o frontend para outra API, configure `VITE_API_BASE_URL` em `wallet
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-O proxy do Vite para `/api` é usado por padrão durante o desenvolvimento.
+Em produção, configure a variável `VITE_API_BASE_URL` nas variáveis de ambiente do projeto frontend na Vercel:
+
+```env
+VITE_API_BASE_URL=https://eventwallet-production.up.railway.app
+```
+
+Após alterar essa variável na Vercel, faça um novo deploy do frontend. O proxy do Vite para `/api` é usado por padrão durante o desenvolvimento local.
+
+### Deploy
+
+- **Vercel:** publique o frontend usando `wallet-frontend` como diretório raiz, `npm run build` como comando de build e `dist` como diretório de saída.
+- **Railway:** publique a API usando `wallet-event-sourcing` como diretório raiz. Execute `npm run build` no build e `node dist/main/server.js` para iniciar a aplicação.
+- Configure as variáveis de ambiente da API, incluindo `PORT` e `MONGO_URI`, no Railway. Não coloque credenciais no README ou no repositório.
 
 ### Scripts disponíveis
 
@@ -359,18 +442,22 @@ Os arquivos estão em `wallet-event-sourcing/tests/`.
 - [x] Histórico de eventos
 - [x] Consulta de saldo em data/hora
 - [x] Painel web básico
+- [x] Deploy em produção
 
 ### Próximos Passos
 
+- [ ] Evoluir CQRS com read models e projections
 - [ ] Transferências entre carteiras
 - [ ] Read models dedicados
+- [ ] Projections
 - [ ] Controle de concorrência e versão esperada
 - [ ] Idempotência das operações
 - [ ] Persistência do event version por agregado
 - [ ] Snapshots
 - [ ] RabbitMQ
-- [ ] Testes de integração
+- [ ] Ampliar testes automatizados e adicionar testes de integração
 - [ ] Observabilidade e logs
+- [ ] Event versioning
 
 ---
 
